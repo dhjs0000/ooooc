@@ -39,7 +39,8 @@ from ooooc_reg import collect_identifiers, render_registry
 ROOT = Path(__file__).resolve().parent
 BUILD = ROOT / "build"
 VERSION = "4.0.0"
-TOOL_VERSION = "1.0"
+CCCCCC_VERSION = "1.0"
+TOOL_VERSION = "1.1"
 
 DEFAULT_REPORT = [
     "demo_zoo.c",
@@ -963,6 +964,9 @@ def cmd_doctor(args):
     print("  源文件      : " + (", ".join(sources) if sources else "（无）"))
     print("  头文件      : " + (", ".join(headers) if headers else "（无）"))
     print("  build/      : " + ("存在" if BUILD.exists() else "不存在"))
+    pack = all((ROOT / name).is_file()
+               for name in ("cccccc.h", "cccccc_std.h"))
+    print("  CCCCCC      : " + ("已装载 v" + CCCCCC_VERSION if pack else "未装载"))
 
     probe = subprocess.run(
         [cc, "-std=gnu11", "-Wall", "-Wextra", "-x", "c", "-", "-fsyntax-only"],
@@ -1006,6 +1010,7 @@ def cmd_all(args):
 def cmd_version(args):
     print("超智慧编程 · O语言 v" + VERSION)
     print("oooo.py v" + TOOL_VERSION)
+    print("CCCCCC 扩展包 v" + CCCCCC_VERSION + "（中文关键字 · 文化自信检查）")
     print()
     print("  超智慧编程三定律")
     print("  一、能用宏解决的，绝不写运行时代码。")

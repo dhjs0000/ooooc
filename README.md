@@ -8,6 +8,8 @@ O语言是一个用 C 宏实现的面向对象语言。它不修改编译器，�
 
 v4.0「太初」把 v3 的骨架补成了完整的一套玩具：真的 RTTI、真的接口、自动析构、自动接口绑定、异常、arena、泛型向量、字符串构造器、测试框架、静态检查工具链和性能基准。
 
+另附 **CCCCCC 扩展包**：中文关键字、中文标准库、中文旗舰 demo。详见 [CCCCCC.md](CCCCCC.md)。编译器不查护照。
+
 它不打算取代 C++。它打算让你在写 C 的时候，突然拥有 class、interface、`instanceof` 和一个会帮你数虚表槽位的 Python 编译器经纪人。
 
 ---
@@ -34,6 +36,8 @@ python oooo.py test       # 编译并运行测试（默认 -Werror）
 python oooo.py demo       # 旗舰演示：超智慧动物园
 python oooo.py bench      # 性能基准
 python oooo.py report     # 静态分析：类、接口、虚表、去虚化建议
+python oooo.py zh         # CCCCCC 中文演示：中华动物园
+python oooo.py confidence # 文化自信检查（玩笑，数字是真的）
 python oooo.py all        # 一条龙验收
 ```
 
@@ -68,6 +72,7 @@ gcc -std=gnu11 -O2 demo_oop.c -o demo_oop
 | arena 分配器 | ✅ 真 | 16 字节对齐，批量释放，`reset` 复用 |
 | 泛型向量 | ✅ 宏 | `OOOOC_VEC(T)`，类型安全靠编译器 |
 | 字符串构造器 | ✅ 真 | 自动扩容，`OOOOC_STR_APPENDF` |
+| 中文关键字（CCCCCC） | ✅ 宏层 | 类、接口、异常、标准库的中文别名，见 [CCCCCC.md](CCCCCC.md) |
 | 静态检查 | ✅ 真 | 槽位数、继承前缀、接口/META 一致性 |
 | 多重继承 | ❌ 假 | 请用接口；`extends(...)` 仅保留用于安慰旧代码 |
 | 模板 | ❌ 假 | 宏就是模板，模板就是宏 |
@@ -263,6 +268,39 @@ OOOOC_STR_FREE(report);
 
 ---
 
+## CCCCCC 扩展包：中文也能当第一等公民
+
+[`CCCCCC.md`](CCCCCC.md) 里有一层中文关键字宏，能让下面这种代码编译、多态、RTTI、抛异常：
+
+```c
+#include "cccccc_std.h"
+
+接口(会游泳, 接口方法(常量 字符 *, 游泳, 会游泳 *))
+类(动物, 常量 字符 *名字; 整数 年龄;)
+派生(鸭子, 动物, 常量 字符 *叫声; 实现接口(会游泳, 泳姿))
+
+整数 主函数(空) {
+    鸭子 *乙 = 新建(鸭子);
+    打印("游泳：%s\n", 发送(会游泳, 当作(会游泳, 乙), 游泳));
+    删除(乙);
+    返回 0;
+}
+```
+
+运行：
+
+```powershell
+python oooo.py zh           # 中华动物园
+python oooo.py 自信         # 文化自信检查（玩笑，数字是真的）
+python oooo.py report demo_zh.c
+```
+
+这不是新编译器，是宏层汉化；`#include` 仍是英文，因为预处理器只认这个。中文标识符依赖 GCC/Clang 的 UTF-8 支持。
+
+> 编译器不查护照。文化自信不是排斥英文，是让中文也能当第一等公民。
+
+---
+
 ## 工具链：`oooo.py`
 
 `oooo.py` 不是编译器，是编译器的经纪人。
@@ -272,9 +310,11 @@ OOOOC_STR_FREE(report);
 | `python oooo.py doctor` | 检查 Python、GCC/Clang、文件、编译自检 |
 | `python oooo.py test` | 构建并运行 `tests.c`，默认 `-Werror` |
 | `python oooo.py demo` | 构建并运行旗舰演示 |
+| `python oooo.py zh` | 构建并运行 CCCCCC 中文演示 |
+| `python oooo.py confidence` | 文化自信检查（玩笑） |
 | `python oooo.py bench` | 构建并运行性能基准 |
 | `python oooo.py report` | 静态分析类、接口、虚表、去虚化建议 |
-| `python oooo.py all` | 测试 + 分析 + 演示 + 基准 |
+| `python oooo.py all` | 测试 + 分析 + 演示 + 中文演示 + 基准 |
 | `python oooo.py build a.c` | 编译任意源文件 |
 | `python oooo.py run a.c` | 编译并运行 |
 | `python oooo.py registry -o reg.h` | 生成符号长度注册表 |
@@ -304,7 +344,7 @@ GCC 使用 `-O3 -march=native -flto -fno-plt`；Clang 自动改用 `-flto -fuse-
 
 ```
 类：10 个    接口：4 个    虚方法：15 个
-OOOOC_SEND：14 处    OOOOC_AS：13 处    OOOOC_NEW：7 处
+OOOOC_SEND/发送：14 处    OOOOC_AS/当作：13 处    OOOOC_NEW/新建：7 处
 
 类层次
   Animal [root]  (2 槽)
@@ -347,10 +387,10 @@ OOOOC_SEND：14 处    OOOOC_AS：13 处    OOOOC_NEW：7 处
 
 解读（顺便诚实）：
 
-- 虚派发比直接调用多 **0.158 ns/op（+7%）**。害怕虚函数的人可以松一口气；现代 CPU 的间接调用预测很强。
+- 虚派发比直接调用多 **0.1–0.5 ns/op**（这张表是 +7%，重跑可能到 +20% 以上）。害怕虚函数的人可以松一口气；现代 CPU 的间接调用预测很强，但具体数字看当天状态。
 - `switch` 比虚派发快约 1 ns，但类型集合必须封闭。想加一种动物，`switch` 要改，虚表不用。
-- RTTI 是虚调用的 **3.99 倍**，主要花在 `strcmp` 上。类型已知时用 `OOOOC_UPCAST` 或 `OOOOC_DEVIRT`；需要检查时再用 `OOOOC_AS`。
-- arena 比 `malloc/free` 快 **23.1 倍**（64B 小对象、热内存）。批量生命周期用 arena，单对象用 `OOOOC_NEW`。
+- RTTI 是虚调用的 **约 3–4.5 倍**，主要花在 `strcmp` 上。类型已知时用 `OOOOC_UPCAST` 或 `OOOOC_DEVIRT`；需要检查时再用 `OOOOC_AS`。
+- arena 比 `malloc/free` 快 **约 18–23 倍**（64B 小对象、热内存）。批量生命周期用 arena，单对象用 `OOOOC_NEW`。
 - 数字会随 CPU、编译器、后台程序变化；结论不一定。
 
 复现：
@@ -419,6 +459,10 @@ python oooo.py run your_file.c
 | [`ooooc.h`](ooooc.h) | 核心：类、虚表、RTTI、接口、生命周期、消息发送 |
 | [`ooooc_std.h`](ooooc_std.h) | 标准库头：arena、向量、字符串、异常、测试框架 |
 | [`ooooc_std.c`](ooooc_std.c) | 异常运行时、测试计数器、控制台 UTF-8 |
+| [`cccccc.h`](cccccc.h) | CCCCCC 中文关键字核心层 |
+| [`cccccc_std.h`](cccccc_std.h) | CCCCCC 中文标准库别名 |
+| [`demo_zh.c`](demo_zh.c) | 中文旗舰演示：中华动物园 |
+| [`CCCCCC.md`](CCCCCC.md) | 扩展包文档、词表、诚实声明 |
 | [`demo_oop.c`](demo_oop.c) | 最小可读示例：Animal / Duck |
 | [`demo_zoo.c`](demo_zoo.c) | 旗舰示例：继承 + 接口 + RTTI + 异常 + arena + 排序 |
 | [`tests.c`](tests.c) | 14 组测试：从命名空间到嵌套异常 |
@@ -445,7 +489,8 @@ python oooo.py run your_file.c
 9. **不是线程安全的。** RTTI 只读所以没问题；arena、字符串构造器、全局测试计数器都不保证并发安全。异常帧是 `__thread` 的。
 10. **性能数字只对这台机器负责。** 你的 CPU、编译器和后台 Chrome 都会改变结果。
 11. **`OOOOC_NEW` 不零初始化。** 它用 `malloc`；构造函数里没赋值的字段就是未定义值。
-12. **这不是生产级框架。** 它是一份认真做过的玩具，一份可以读、可以改、可以拿去面试时吓人的 C 代码。
+12. **中文标识符是编译器扩展。** GCC/Clang 支持 UTF-8 标识符；预处理指令仍是英文，宏层汉化改不了 `#include`。
+13. **这不是生产级框架。** 它是一份认真做过的玩具，一份可以读、可以改、可以拿去面试时吓人的 C 代码。
 
 ---
 
@@ -458,7 +503,7 @@ A：C++ 的编译器知道自己在干什么；O语言不知道，但它很有�
 A：因为名字越长，代码越智慧。这是本项目唯一不需要证明的定理。
 
 **Q：虚函数真的不比直接调用慢多少吗？**
-A：本机 +0.158 ns/op。你可以继续害怕，但数据说不用那么怕。
+A：本机约 0.1–0.5 ns/op。你可以继续害怕，但数据说不用那么怕。
 
 **Q：为什么接口名和类名必须唯一？**
 A：RTTI 靠名字认亲。没有 `strcmp` 的 RTTI 需要更复杂的元数据；我们选择了简单和可读。
